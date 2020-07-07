@@ -4,76 +4,74 @@
 #   Simple Bash Prompt (SBP)    #
 #################################
 
-export sbp_path
-# shellcheck source=functions/log.bash
-source "${sbp_path}/functions/log.bash"
-# shellcheck source=functions/interact.bash
-source "${sbp_path}/functions/interact.bash"
+# For catching installs using the old config
+if [[ -z "$SBP_PATH" && -n "$sbp_path" ]]; then
+  read -r -d '' alert_text <<'EOF'
+   Unfortunatly your current configuration is incompatible with the latest version of SBP
 
-_sbp_previous_history=
+   Two changes are required:
+   1. Please backup and remove your configuration ${HOME}/.config/sbp
+   2. Please change the casing of the 'sbp_path' variable to 'SBP_PATH' in your '$HOME/.bashrc'
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  export date_cmd='gdate'
+   Start a new bash shell or source "${HOME}/.bashrc" when these changes have been made.
+
+   In the mean time, your prompt has ben set to '\h@\h:\w'
+EOF
+  # Alert the user
+  >&2 printf '\e[38;5;76m%s\e[00m\n' "$alert_text"
+  # Set a usable prompt
+  PS1='\u@\h:\w '
+  # Override the prompt command
+  alias _sbp_set_prompt='true'
+  return 1
+fi
+
+# shellcheck source=src/interact.bash
+source "${SBP_PATH}/src/interact.bash"
+# shellcheck source=src/debug.bash
+source "${SBP_PATH}/src/debug.bash"
+
+if [[ -d "/run/user/${UID}" ]]; then
+  SBP_TMP=$(mktemp -d --tmpdir="/run/user/${UID}") && trap 'rm -rf "$SBP_TMP"' EXIT;
 else
-  export date_cmd='date'
+  SBP_TMP=$(mktemp -d) && trap 'rm -rf "$SBP_TMP"' EXIT;
 fi
 
-SHELL_BIRTH=$(( $(date +'%s') - SECONDS ))
-export SHELL_BIRTH
-
-_sbp_timer_start() {
-  timer_start=$("$date_cmd" +'%s%3N')
-}
-
-_sbp_timer_tick() {
-  timer_stop=$("$date_cmd" +'%s%3N')
-  timer_spent=$(( timer_stop - timer_start))
-  >&2 echo "${timer_spent}ms: $1"
-  timer_start=$("$date_cmd" +'%s%3N')
-}
-
-export -f _sbp_timer_start
-export -f _sbp_timer_tick
-
-options_file=$(sbp extra_options)
-if [[ -f "$options_file" ]]; then
-  source "$options_file"
-fi
-
-#trap 'printf "\e[0n"' WINCH
+export SBP_TMP
+export SBP_PATH
+export COLUMNS
 
 _sbp_set_prompt() {
-  local command_exit_code=$?
-  [[ -n "$SBP_DEBUG" ]] && _sbp_timer_start
-  local last_history command_started command_ended command_time
-  # We need to re-evaluate this to remove excess spaces, so no quotes
-  last_history=$( echo $(HISTTIMEFORMAT='%s ' history 1))
-  # Remove the history index
-  last_history=${last_history#* }
-
-  if [[ -z "$_sbp_previous_history" || "$last_history" == "$_sbp_previous_history" ]]; then
-    command_exit_code=
-    command_time=
+  local command_status=$?
+  local command_status current_time command_start command_duration
+  [[ -n "$SBP_DEBUG" ]] && debug::start_timer
+  current_time=$(date +%s)
+  if [[ -f "${SBP_TMP}/execution" ]]; then
+    command_start=$(< "${SBP_TMP}/execution")
+    command_duration=$(( current_time - command_start ))
+    rm "${SBP_TMP}/execution"
   else
-    command_ended=$(( SHELL_BIRTH + SECONDS ))
-    # Pick the timestamp only which is first
-    command_started=${last_history/ *}
-    command_time=$(( command_ended - command_started ))
+    command_duration=0
+    command_status=0
   fi
 
-  _sbp_previous_history=$last_history
-  unset last_history
-
-  title="${PWD##*/}"
-
   # TODO move this somewhere else
+  title="${PWD##*/}"
   if [[ -n "$SSH_CLIENT" ]]; then
     title="${HOSTNAME:-ssh}:${title}"
   fi
   printf '\e]2;%s\007' "$title"
 
-  PS1=$(bash "${sbp_path}/functions/generate.bash" "$COLUMNS" "$command_exit_code" "$command_time")
-  [[ -n "$SBP_DEBUG" ]] && _sbp_timer_tick "Done"
+  PS1=$(bash "${SBP_PATH}/src/main.bash" "$command_status" "$command_duration")
+  [[ -n "$SBP_DEBUG" ]] && debug::tick_timer "Done"
+
 }
+
+_sbp_pre_exec() {
+  date +%s > "${SBP_TMP}/execution"
+}
+
+# shellcheck disable=SC2034
+PS0="\[\$(_sbp_pre_exec)\]"
 
 [[ "$PROMPT_COMMAND" =~ _sbp_set_prompt ]] || PROMPT_COMMAND="_sbp_set_prompt;$PROMPT_COMMAND"
