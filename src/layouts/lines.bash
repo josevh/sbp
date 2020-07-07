@@ -13,10 +13,6 @@ print_themed_prompt() {
   local line_two_segments=$3
   local prompt_gap_size=$4
 
-  if [[ "$PROMPT_COMPACT" == false ]]; then
-    left_segments="\n${left_segments}"
-  fi
-
   local reset_color
   decorate::print_colors 'reset_color'
 
@@ -29,6 +25,10 @@ print_themed_prompt() {
 
     local filler_segment
     print_themed_filler 'filler_segment' "$prompt_gap_size"
+  fi
+
+  if [[ "$PROMPT_COMPACT" == false ]]; then
+    left_segments="\n${left_segments}"
   fi
 
   right_segments="${right_segments}${reset_color}"
