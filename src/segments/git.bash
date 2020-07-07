@@ -3,8 +3,8 @@
 segments::git() {
   local max_length=$SEGMENTS_MAX_LENGTH
 
-  local incoming_icon="$SEGMENTS_GIT_INCOMING_ICON"
-  local outgoing_icon="$SEGMENTS_GIT_OUTGOING_ICON"
+  local incoming_icon="${SEGMENTS_GIT_INCOMING_ICON:-↓}"
+  local outgoing_icon="${SEGMENTS_GIT_OUTGOING_ICON:-↑}"
 
   local branch_only="${SEGMENTS_GIT_BRANCH_ONLY:-false}"
 
