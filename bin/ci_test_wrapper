@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+BASH=$1
+
+docker pull bash:$BASH
+docker run bash:$BASH --version
+docker run -v $PWD:/bash bash:$BASH /bash/bin/ci_test
