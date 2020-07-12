@@ -9,14 +9,10 @@ source_src() {
   src_source="${SBP_PATH}/src/${SRC_NAME}.bash"
 
   if [[ ! -f "$src_source" ]]; then
-    debug::log_error "Could not find $src_source"
+    debug::log "Could not find $src_source"
     exit 1
   fi
   source "$src_source"
-}
-
-execute_src() {
-  "srcs::${SRC_NAME}"
 }
 
 source_src

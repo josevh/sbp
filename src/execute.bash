@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+# TODO replace with call to configure::get feature file
+# and check for peekaboo in the segment execution
 execute::get_script() {
-  local -n return_value=$1
+  local -n get_script_result=$1
   local feature_type=$2
   local feature_name=$3
 
@@ -11,7 +13,7 @@ execute::get_script() {
 
   local feature_file
   configure::get_feature_file 'feature_file' "$feature_type" "$feature_name"
-  return_value="$feature_file"
+  get_script_result="$feature_file"
 }
 
 execute::execute_nohup_function() {
@@ -49,7 +51,7 @@ execute::execute_prompt_segment() {
     local -n PRIMARY_COLOR_HIGHLIGHT="SEGMENTS_${segment^^}_COLOR_PRIMARY_HIGHLIGHT"
     local -n SECONDARY_COLOR_HIGHLIGHT="SEGMENTS_${segment^^}_COLOR_SECONDARY_HIGHLIGHT"
 
-    local -n SPLITTER_COLOR="SEGMENTS_${segment^^}_SPLITTER_COLOR"
+    local -n SPLITTER_COLOR="SEGMENTS_${segment^^}_COLOR_SPLITTER"
 
     local -n max_length_override="SEGMENTS_${segment^^}_MAX_LENGTH"
     if [[ -n "$max_length_override" ]]; then

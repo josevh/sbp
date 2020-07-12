@@ -6,7 +6,7 @@ refresh_rate="${SEGMENTS_WTTR_REFRESH_RATE:-600}"
 
 segments::wttr_refresh() {
   if [[ ! -f "$SEGMENT_CACHE" ]]; then
-    debug::log_error "No cache folder"
+    debug::log "No cache folder"
   fi
 
   if [[ -f "$SEGMENT_CACHE" ]]; then
@@ -22,13 +22,13 @@ segments::wttr_refresh() {
     return 0
   fi
 
-  curl -H "Accept-Language: ${LANG%_*}" --compressed "wttr.in/${location}?format=${format}" | tr -d '\n' > "$SEGMENT_CACHE"
+  curl -H "Accept-Language: ${LANG%_*}" --compressed "wttr.in/${location}?format=${format}" | tr -d '\n' | tr ';' '\n' > "$SEGMENT_CACHE"
 }
 
 
 segments::wttr() {
   if [[ -f "$SEGMENT_CACHE" ]]; then
-    mapfile -d ';' -t result < "$SEGMENT_CACHE"
+    mapfile -t result < "$SEGMENT_CACHE"
     print_themed_segment 'normal' "${result[@]}"
   fi
   execute::execute_nohup_function segments::wttr_refresh

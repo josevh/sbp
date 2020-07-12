@@ -5,4 +5,4 @@ set -e
 SBP_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
 export SBP_PATH
 
-bats -r "${SBP_PATH}/test/"
+shellcheck -x --severity=error "${SBP_PATH}/sbp.bash" "${SBP_PATH}/src/main.bash"
