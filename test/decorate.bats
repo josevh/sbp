@@ -20,7 +20,7 @@ load src_helper
 @test "test that we can print valid 256 colors" {
   local fg_color=1
   local bg_color=2
-  local expected_colors="\[\e[38;5;${fg_color}m\]\[\e[48;5;${bg_color}m\]"
+  local expected_colors="\001\e[38;5;${fg_color}m\002\001\e[48;5;${bg_color}m\002"
 
   local printed_colors
   decorate::print_colors 'printed_colors' "$fg_color" "$bg_color"
@@ -31,7 +31,7 @@ load src_helper
 @test "test that we can print valid rgb colors" {
   local fg_color='255;255;255'
   local bg_color='0;0;1'
-  local expected_colors="\[\e[38;2;${fg_color}m\]\[\e[48;2;${bg_color}m\]"
+  local expected_colors="\001\e[38;2;${fg_color}m\002\001\e[48;2;${bg_color}m\002"
 
   local printed_colors
   decorate::print_colors 'printed_colors' "$fg_color" "$bg_color"
@@ -42,7 +42,7 @@ load src_helper
 @test "test that we can print valid reset colors" {
   local fg_color=''
   local bg_color=''
-  local expected_colors="\[\e[39m\]\[\e[49m\]"
+  local expected_colors="\001\e[39m\002\001\e[49m\002"
 
   local printed_colors
   decorate::print_colors 'printed_colors' "$fg_color" "$bg_color"

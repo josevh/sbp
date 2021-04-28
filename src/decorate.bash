@@ -71,6 +71,6 @@ decorate::format_color() {
   fi
 
   if [[ "$escaped" == 'true' ]]; then
-    format_color_result="\[${format_color_result}\]"
+    format_color_result="\001${format_color_result}\002"
   fi
 }
